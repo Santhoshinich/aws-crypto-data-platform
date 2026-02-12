@@ -15,8 +15,7 @@ High-Level Architecture
 <img width="402" height="330" alt="image" src="https://github.com/user-attachments/assets/399e00f3-b691-4333-9344-d116ebd99ac2" />
 
 # CI/CD Flow
-<img width="1536" height="1024" alt="ChatGPT Image Feb 12, 2026, 03_27_06 PM" src="https://github.com/user-attachments/assets/bf434c64-4d58-4c04-8917-516817f51384" />
-
+<img width="317" height="186" alt="549079720-ff987b9b-98a7-43c4-a6b2-34d45037c5e5" src="https://github.com/user-attachments/assets/2af34e3a-a6f6-46fa-b7dd-fed1dd9f2772" />
 
 # Data Pipeline Design
 ## 1. Ingestion Layer (Serverless)
