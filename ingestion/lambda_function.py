@@ -60,3 +60,4 @@ def lambda_handler(event, context):
         "records_written": len(transformed),
         "s3_key": s3_key
     }
+# CI test 
