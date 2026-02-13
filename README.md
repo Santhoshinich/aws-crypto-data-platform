@@ -28,9 +28,10 @@ Partitioned by:
 
 source=coinbase/product=BTC-USD/date=YYYY-MM-DD
 
-Why REST Polling?
+## Why REST Polling?
 
 Lambda does not support long-lived WebSocket connections reliably.
+
 REST polling ensures:
 
 Stateless execution
@@ -64,7 +65,6 @@ Query efficiency
 ## 3. Gold Layer (Business Aggregations)
 
 Aggregations performed:
-
 Trade count per hour
 
 Average price per hour
@@ -94,50 +94,47 @@ CI/CD User	Update Lambda + upload Glue script only
 
 ## This demonstrates:
 
-Least privilege enforcement
-
-Scoped resource ARNs
-
-Region-specific access control
+-> Least privilege enforcement
+-> Scoped resource ARNs
+-> Region-specific access control
 
 # CI/CD Implementation
 
-Deployment is automated using GitHub Actions:
+-> Deployment is automated using GitHub Actions:
 
-On every push to main:
+-> On every push to main:
 
-Lambda package is created
+-> Lambda package is created
 
-aws lambda update-function-code is executed
+-> aws lambda update-function-code is executed
 
-Glue ETL script is synced to S3
+-> Glue ETL script is synced to S3
 
-Manual console edits are eliminated.
+-> Manual console edits are eliminated.
 
 ## This ensures:
 
-Reproducibility
+a. Reproducibility
 
-Deployment consistency
+b. Deployment consistency
 
-Infrastructure discipline
+c. Infrastructure discipline
 
 # Cost Governance Strategy
 
-Cost control is intentionally designed:
+-> Cost control is intentionally designed:
 
-EventBridge disabled when not ingesting
+-> EventBridge disabled when not ingesting
 
-Parquet format reduces Athena scan size
+-> Parquet format reduces Athena scan size
 
-Partition pruning minimizes query cost
+-> Partition pruning minimizes query cost
 
-Glue jobs run on-demand (no continuous DPU usage)
+-> Glue jobs run on-demand (no continuous DPU usage)
 
-No persistent compute clusters
+-> No persistent compute clusters
 
-Athena cost model:
-
+-> Athena cost model:
 Billed per TB scanned — minimized via Parquet + partitioning.
 
 # Repository Structure
@@ -147,28 +144,33 @@ Billed per TB scanned — minimized via Parquet + partitioning.
 
 # Design Principles Demonstrated
 
-Serverless ingestion
+-> Serverless ingestion
 
-Lakehouse architecture
+-> Lakehouse architecture
 
-PySpark ETL modeling
+-> PySpark ETL modeling
 
-IAM debugging and scoping
+-> IAM debugging and scoping
 
-Region-aware AWS operations
+-> Region-aware AWS operations
 
-CI/CD automation
+-> CI/CD automation
 
-Cost-aware data engineering
+->Cost-aware data engineering
 
 # Current Capabilities
 
- Live ingestion from Coinbase
- Bronze/Silver/Gold lake layers
- Parquet-based analytics
- Athena SQL queries
- Automated Lambda deployment via CI/CD
- IAM least-privilege enforcement
+ -> Live ingestion from Coinbase
+ 
+ -> Bronze/Silver/Gold lake layers
+
+ -> Parquet-based analytics
+ 
+ -> Athena SQL queries
+ 
+ -> Automated Lambda deployment via CI/CD
+ 
+ -> IAM least-privilege enforcement
 
 # Future Enhancements
 
@@ -181,3 +183,65 @@ Multi-product ingestion (ETH-USD)
 Automated Glue job trigger in CI
 
 Data quality validation layer
+
+# Enchancements
+## Incremental Processing Strategy:
+-> The current implementation uses a full refresh transformation model, meaning:
+
+-> Each Glue job run reads all Bronze data
+
+-> Silver and Gold layers are rebuilt using mode("overwrite")
+
+-> Historical data is reprocessed every execution
+
+While this approach is deterministic and simple, it introduces several limitations as data volume grows.
+
+## Problems:
+1️. Compute Inefficiency
+
+As Bronze data grows over time:
+1 day  →  30k records,
+30 days → 900k records,
+180 days → 5M+ records
+
+Every run reprocesses the entire history, leading to:
+Longer execution times
+Higher Glue DPU costs
+Unnecessary compute consumption
+
+2️. Storage Rewrite Overhead
+
+Using overwrite:
+Deletes existing Silver and Gold data
+Rewrites everything
+Increases S3 write operations
+Creates unnecessary churn
+
+3. Operational Risk
+
+Full refresh jobs:
+Increase runtime
+Increase failure surface area
+Make backfills expensive
+Complicate scaling strategy
+
+4️. Not Production-Realistic
+
+In real-world data engineering systems:
+Historical data is rarely reprocessed continuously
+Pipelines operate incrementally
+Systems track processing state
+
+A full refresh model is acceptable for development, but not for production-scale workloads.
+Incremental processing solves the scalability, cost, and reliability problems caused by full-refresh pipelines by ensuring only new data is processed instead of reprocessing the entire dataset every run.
+
+## Implementing incremental processing demonstrates:
+a. Awareness of data growth patterns
+
+b. Compute cost optimization
+
+c. Understanding of idempotency
+
+d. Knowledge of Glue state management
+
+e. Real-world pipeline design thinking
